@@ -106,6 +106,11 @@ class Api
         return $this->_serviceDocument;
     }
 
+    public function getTransport()
+    {
+        return $this->_transport;
+    }
+
     /**
      * @return \Yandex\Fotki\Api\AlbumsCollection
      */

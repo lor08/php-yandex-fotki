@@ -103,8 +103,25 @@ class Transport implements \Serializable
         switch ($method) {
             case self::METHOD_POST:
                 curl_setopt($curl, CURLOPT_POST, 1);
-                if (is_array($params)) {
-                    curl_setopt($curl, CURLOPT_POSTFIELDS, $params);
+
+                $imgstr = '';
+                $imgmime = '';
+                if (isset($params['image'])){
+                    $imgstr = $params['image'];
+                    $imgSize = getimagesizefromstring($params['image']);
+                    $imgmime = $imgSize['mime'];
+
+                    $headers[] = 'Content-Type: ' . $imgSize['mime'];
+                    $headers[] = 'Content-Length: ' . strlen($imgstr);
+
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $imgstr);
+                }elseif(isset($params['atomEntry'])){
+                    $headers[] = 'Content-Type: application/atom+xml; charset=utf-8; type=entry';
+                    curl_setopt($curl, CURLOPT_POSTFIELDS, $params['atomEntry']);
+                }else{
+                    // $headers[] = 'Content-Type: application/json';
+                    if (is_array($params))
+                        curl_setopt($curl, CURLOPT_POSTFIELDS, http_build_query($params));
                 }
                 break;
             default:
@@ -116,6 +133,7 @@ class Transport implements \Serializable
         } elseif(!empty($this->_fimpToken)) {
             $headers[] = 'Authorization: FimpToken realm="fotki.yandex.ru", token="' . $this->_fimpToken . '"';
         }
+        print_r($headers);
         curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
         $data = curl_exec($curl);
         $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
